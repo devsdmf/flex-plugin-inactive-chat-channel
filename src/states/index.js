@@ -1,11 +1,11 @@
 import { combineReducers } from 'redux';
 
-import { reduce as CustomTaskListReducer } from './CustomTaskListState';
+import { reduce as WorkerTasksReducer } from './WorkerTasksState';
 
 // Register your redux store under a unique namespace
 export const namespace = 'flex-inactive-chat-channel';
 
 // Combine the reducers
 export default combineReducers({
-  customTaskList: CustomTaskListReducer,
+  workerTasks: WorkerTasksReducer,
 });
