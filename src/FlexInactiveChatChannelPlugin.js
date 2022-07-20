@@ -29,6 +29,15 @@ export default class FlexInactiveChatChannelPlugin extends FlexPlugin {
   async init(flex, manager) {
     this.registerReducers(manager);
 
+    const inactiveChatTaskChannel = flex.DefaultTaskChannels.createChatTaskChannel(
+      'inactive-chat',
+      task => {
+        return task.attributes.inactive == 1;
+      }
+    );
+
+    flex.TaskChannels.register(inactiveChatTaskChannel);
+
     registerEventHandlers(flex, manager);
 
     // initializing worker tasks
