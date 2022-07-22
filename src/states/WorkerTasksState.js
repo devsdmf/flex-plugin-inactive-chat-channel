@@ -6,7 +6,7 @@ const ACTION_REMOVE_TASK = 'REMOVE_TASK';
 const ACTION_SET_INACTIVATION_SCHEDULER = 'SET_INACTIVATION_SCHEDULER';
 const ACTION_CLEAR_INACTIVATION_SCHEDULER = 'CLEAR_INACTIVATION_SCHEDULE';
 
-const DEFAULT_INACTIVATION_TIMEOUT = 5000;
+export const DEFAULT_INACTIVATION_TIMEOUT = 10000;
 
 const initialState = {
   tasks: [],
@@ -27,15 +27,15 @@ export const Actions = {
   }),
   removeTask: taskSid => ({
     type: ACTION_REMOVE_TASK,
-    payload: taskSid,
+    payload: { taskSid },
   }),
-  setInactivationScheduler: (channelSid, handler) => ({
+  setInactivationScheduler: (taskSid, handler) => ({
     type: ACTION_SET_INACTIVATION_SCHEDULER,
-    payload: { channelSid, handler },
+    payload: { taskSid, handler },
   }),
-  removeInactivationScheduler: channelSid => ({
+  removeInactivationScheduler: taskSid => ({
     type: ACTION_CLEAR_INACTIVATION_SCHEDULER,
-    payload: { channelSid },
+    payload: { taskSid },
   }),
 };
 
@@ -48,19 +48,19 @@ export const reduce = (state = initialState, action) => {
     case ACTION_UPDATE_TASK:
       return {
         ...state,
-        tasks: state.tasks.map(task => task.taskSid === action.payload.taskSid ? action.payload : task),
+        tasks: state.tasks.map(task => task.sid === action.payload.sid ? action.payload : task),
       };
     case ACTION_REMOVE_TASK:
-      return { ...state, tasks: state.tasks.filter(t => t.sid !== action.payload) };
+      return { ...state, tasks: state.tasks.filter(t => t.sid !== action.payload.taskSid) };
     case ACTION_SET_INACTIVATION_SCHEDULER:
       return {
         ...state,
         tasks: state.tasks.map(task => {
-          if (task.inactivateAt) {
-            clearTimeout(task.inactivateAt);
-          }
+          if (task.sid === action.payload.taskSid) {
+            if (task.inactivateAt) {
+              clearTimeout(task.inactivateAt);
+            }
 
-          if (task.attributes.channelSid === action.payload.channelSid) {
             return {
               ...task,
               inactivateAt: setTimeout(action.payload.handler, DEFAULT_INACTIVATION_TIMEOUT, task),
@@ -74,7 +74,7 @@ export const reduce = (state = initialState, action) => {
       return {
         ...state,
         tasks: state.tasks.map(task => {
-          if (task.attributes.channelSid === action.payload.channelSid &&
+          if (task.sid === action.payload.taskSid &&
             task.inactivateAt !== undefined
           ) {
             clearTimeout(task.inactivateAt);

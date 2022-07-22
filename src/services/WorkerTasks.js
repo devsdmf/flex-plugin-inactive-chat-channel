@@ -1,3 +1,4 @@
+import { namespace } from '../states';
 
 const SERVERLESS_DOMAIN = `${process.env.FLEX_APP_TWILIO_SERVERLESS_DOMAIN}`;
 
@@ -12,7 +13,7 @@ const extractTaskInfo = task => ({
   attributes: task.attributes,
 });
 
-export const getWorkerTasksFromState = (state) => 
+export const getWorkerTasksFromReservations = (state) => 
   [...state.flex.worker.tasks].map(([ key, value ]) => ({ key, value }))
     .map(({ key: sid, value: task }) => ({
       sid,
@@ -24,6 +25,17 @@ export const getTaskFromReservationEvent = reservation => ({
   ...extractTaskInfo(reservation.task),
 });
 
+export const updateWorkerTasks = manager => async activeTasks => {
+  const attributes = manager.workerClient.attributes;
+
+  return manager.workerClient.setAttributes({ ...attributes, activeTasks })
+    .then(_ => true)
+    .catch(err => {
+      console.error('[updateWorkerTasks] An error has occurred at trying to update worker tasks', err);
+      return false;
+    });
+};
+
 export const setTaskToInactive = manager => async task => {
   const url = `${SERVERLESS_DOMAIN}/set-chat-to-inactive`;
 
@@ -32,7 +44,7 @@ export const setTaskToInactive = manager => async task => {
     body: new URLSearchParams({
       taskSid: task.taskSid,
       taskChannelSid: task.taskChannelSid,
-      Token: manager.store.getState().flex.session.ssoTokenPayload.token,
+      Token: getToken(manager),
     }),
     headers: DEFAULT_REQUEST_HEADERS,
   };
@@ -45,4 +57,35 @@ export const setTaskToInactive = manager => async task => {
       return false;
     });
 };
+
+export const setTaskToActive = manager => async task => {
+  const url = `${SERVERLESS_DOMAIN}/set-chat-to-active`;
+
+  const options = {
+    method: 'POST',
+    body: new URLSearchParams({
+      taskSid: task.taskSid,
+      taskChannelSid: task.taskChannelSid,
+      Token: getToken(manager),
+    }),
+    headers: DEFAULT_REQUEST_HEADERS,
+  };
+
+  return fetch(url, options)
+    .then(res => res.json())
+    .then(data => data.success)
+    .catch(err => {
+      console.error('[setTaskToActive] An error ocurred when trying to set task as inactive', err);
+      return false;
+    });
+};
+
+export const getWorkerTasksFromState = manager => 
+  manager.store
+    .getState()[namespace]
+    .workerTasks
+    .tasks;
+
+const getToken = manager => 
+  manager.store.getState().flex.session.ssoTokenPayload.token;
 

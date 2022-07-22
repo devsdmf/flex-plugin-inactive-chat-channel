@@ -2,14 +2,16 @@ import React from 'react';
 import { VERSION } from '@twilio/flex-ui';
 import { FlexPlugin } from '@twilio/flex-plugin';
 
+import { registerTaskChannel } from './taskChannel/InactiveTaskTaskChannel';
+
 import { Actions as WorkerTasksActions } from './states/WorkerTasksState';
 import reducers, { namespace } from './states';
 
 import registerEventHandlers from './eventHandlers';
 
 import {
-  getTaskFromReservationEvent,
-  getWorkerTasksFromState 
+  getWorkerTasksFromReservations,
+  updateWorkerTasks,
 } from './services/WorkerTasks';
 
 export const PLUGIN_NAME = 'FlexInactiveChatChannelPlugin';
@@ -29,19 +31,14 @@ export default class FlexInactiveChatChannelPlugin extends FlexPlugin {
   async init(flex, manager) {
     this.registerReducers(manager);
 
-    const inactiveChatTaskChannel = flex.DefaultTaskChannels.createChatTaskChannel(
-      'inactive-chat',
-      task => {
-        return task.attributes.inactive == 1;
-      }
-    );
-
-    flex.TaskChannels.register(inactiveChatTaskChannel);
-
+    registerTaskChannel(flex);
     registerEventHandlers(flex, manager);
 
     // initializing worker tasks
-    manager.store.dispatch(WorkerTasksActions.initWorkerTasks(getWorkerTasksFromState(manager.store.getState())));
+    const workerTasks = getWorkerTasksFromReservations(manager.store.getState());
+
+    updateWorkerTasks(manager)(workerTasks.length);
+    manager.store.dispatch(WorkerTasksActions.initWorkerTasks(workerTasks));
   }
 
   /**
