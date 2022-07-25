@@ -4,11 +4,12 @@ const assets = Runtime.getAssets();
 const channelMapper = require(assets['/taskChannels.js'].path);
 
 exports.handler = TokenValidator((context, event, callback) => {
-  const res = new Twilio.Response();
+  const response = new Twilio.Response();
 
-  res.appendHeader('Access-Control-Allow-Origin', '*');
-  res.appendHeader('Access-Control-Allow-Methods', 'OPTIONS POST GET');
-  res.appendHeader('Access-Control-Allow-Headers', 'Content-Type');
+  response.setStatusCode(200);
+  response.appendHeader("Access-Control-Allow-Origin", "*");
+  response.appendHeader("Access-Control-Allow-Methods", "OPTIONS POST GET");
+  response.appendHeader("Access-Control-Allow-Headers", "Content-Type");
 
   const {
     taskSid,
@@ -18,10 +19,10 @@ exports.handler = TokenValidator((context, event, callback) => {
   const taskChannels = channelMapper.filter(i => i.activeChannelSid === taskChannelSid).pop();
 
   if (taskChannels === undefined) {
-    res.setStatusCode(400);
-    res.setBody({ error: 'TaskChannel is not mapped' });
+    response.setStatusCode(400);
+    response.setBody({ error: 'TaskChannel is not mapped' });
 
-    return callback(null, res);
+    return callback(null, response);
   }
 
   const client = context.getTwilioClient();
@@ -42,8 +43,15 @@ exports.handler = TokenValidator((context, event, callback) => {
           })
         })
         .then(updatedTask => {
-          res.setBody({ success: true });
-          return callback(null, res);
+          response.setBody({ success: true });
+          return callback(null, response);
         });
+    })
+    .catch(err => {
+      console.error('[set-task-to-inactive] An error has occurred => ', err);
+      response.setStatusCode(404);
+      response.setBody({ success: false });
+
+      return callback(null, response);
     });
 });

@@ -6,9 +6,10 @@ const channelMapper = require(assets['/taskChannels.js'].path);
 exports.handler = TokenValidator((context, event, callback) => {
   const res = new Twilio.Response();
 
-  res.appendHeader('Access-Control-Allow-Origin', '*');
-  res.appendHeader('Access-Control-Allow-Methods', 'OPTIONS POST GET');
-  res.appendHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setStatusCode(200);
+  res.appendHeader("Access-Control-Allow-Origin", "*");
+  res.appendHeader("Access-Control-Allow-Methods", "OPTIONS, POST, GET");
+  res.appendHeader("Access-Control-Allow-Headers", "Content-Type");
 
   const {
     taskSid,
@@ -52,5 +53,12 @@ exports.handler = TokenValidator((context, event, callback) => {
 
           return callback(null, res);
         });
+    })
+    .catch(err => {
+      console.error('[set-task-to-active] An error occurred => ', err);
+      res.setStatusCode(404);
+      res.setBody({ success: false });
+
+      return callback(null, res);
     });
 });
