@@ -13,7 +13,7 @@ const extractTaskInfo = task => ({
   attributes: task.attributes,
 });
 
-export const getWorkerTasksFromReservations = (state) => 
+export const getWorkerTasksFromState = (state) => 
   [...state.flex.worker.tasks].map(([ key, value ]) => ({ key, value }))
     .map(({ key: sid, value: task }) => ({
       sid,
@@ -24,17 +24,6 @@ export const getTaskFromReservationEvent = reservation => ({
   sid: reservation.sid,
   ...extractTaskInfo(reservation.task),
 });
-
-export const updateWorkerTasks = manager => async activeTasks => {
-  const attributes = manager.workerClient.attributes;
-
-  return manager.workerClient.setAttributes({ ...attributes, activeTasks })
-    .then(_ => true)
-    .catch(err => {
-      console.error('[updateWorkerTasks] An error has occurred at trying to update worker tasks', err);
-      return false;
-    });
-};
 
 export const setTaskToInactive = manager => async task => {
   const url = `${SERVERLESS_DOMAIN}/set-chat-to-inactive`;
@@ -79,12 +68,6 @@ export const setTaskToActive = manager => async task => {
       return false;
     });
 };
-
-export const getWorkerTasksFromState = manager => 
-  manager.store
-    .getState()[namespace]
-    .workerTasks
-    .tasks;
 
 const getToken = manager => 
   manager.store.getState().flex.session.ssoTokenPayload.token;

@@ -10,7 +10,7 @@ import reducers, { namespace } from './states';
 import registerEventHandlers from './eventHandlers';
 
 import {
-  getWorkerTasksFromReservations,
+  getWorkerTasksFromState,
   updateWorkerTasks,
 } from './services/WorkerTasks';
 
@@ -35,10 +35,7 @@ export default class FlexInactiveChatChannelPlugin extends FlexPlugin {
     registerEventHandlers(flex, manager);
 
     // initializing worker tasks
-    const workerTasks = getWorkerTasksFromReservations(manager.store.getState());
-
-    updateWorkerTasks(manager)(workerTasks.length);
-    manager.store.dispatch(WorkerTasksActions.initWorkerTasks(workerTasks));
+    manager.store.dispatch(WorkerTasksActions.initWorkerTasks(getWorkerTasksFromState(manager.store.getState())));
   }
 
   /**

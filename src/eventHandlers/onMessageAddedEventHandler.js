@@ -12,7 +12,7 @@ const onMessageAddedEventHandler = manager => message => {
   console.log('onMessageAdded called!', message);
   const channelSid = message.channel.sid;
 
-  const task = getWorkerTasksFromState(manager)
+  const task = getWorkerTasksFromState(manager.store.getState())
     .filter(t => t.attributes.channelSid === channelSid)
     .pop();
 
